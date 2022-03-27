@@ -8,8 +8,8 @@ function draw() {
     }
 }
 
-// 팔레트에서 선택한 색깔로 그려질 사각형의 색상을 결정
-function SetColor(obj) {
+// SetColor(): 팔레트에서 선택한 색깔로 그려질 사각형의 색상을 결정
+function setColor(obj) {
     switch(obj.id) {
         case "green":
             color = 'rgba(0, 128, 0, 1.0)';
