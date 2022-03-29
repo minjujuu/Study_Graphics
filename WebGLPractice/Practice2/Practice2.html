@@ -2,28 +2,38 @@
 <html>
 
 <head>
-    <title>Canvas Example</title>
+    <title>201914302 박민주</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width">
     <script src="Practice2.js"></script>
 </head>
 <body>
+
+    <div id="Log">201914302 박민주</div>
+
+    <div style="position:absolute;top:30px;left:10px">팔레트에서 색상을 선택 후 캔버스를 클릭해서 사각형을 그려보세요!</div>
     <div>
-        <div id="Log">201914302 박민주</div>
-        <div style="position:absolute;top:40px;left:10px;width:20px;height:20px;background:green;" id="green"
+        
+        <div style="position:absolute;top:60px;left:10px;width:20px;height:20px;background:green;" id="green"
         onclick="setColor(this)"></div>
-        <div style="position:absolute;top:40px;left:40px;width:20px;height:20px;background:rgb(54, 80, 223);" id="blue"
+        <div style="position:absolute;top:60px;left:40px;width:20px;height:20px;background:rgb(54, 80, 223);" id="blue"
         onclick="setColor(this)"></div>
-        <div style="position:absolute;top:40px;left:70px;width:20px;height:20px;background:red;" id="red"
+        <div style="position:absolute;top:60px;left:70px;width:20px;height:20px;background:red;" id="red"
         onclick="setColor(this)"></div>
-        <div style="position:absolute;top:40px;left:100px;width:20px;height:20px;background:rgb(233, 230, 67);" id="yellow"
+        <div style="position:absolute;top:60px;left:100px;width:20px;height:20px;background:rgb(233, 230, 67);" id="yellow"
         onclick="setColor(this)"></div>
-        <div style="position:absolute;top:40px;left:130px;width:20px;height:20px;background:violet;" id="violet"
+        <div style="position:absolute;top:60px;left:130px;width:20px;height:20px;background:violet;" id="violet"
         onclick="setColor(this)"></div>
     </div>
+
     
-    <div onload="draw()" onclick="clickProc00(event)">
-        <canvas id="example" width="200" height="100" style="position:absolute;top:80px; border: 1px solid black;"></canvas>
+    <div onload="draw()" onclick="drawRectAtClick(event)">
+        <canvas id="rectSketchBook" width="200" height="100" style="position:absolute;top:90px; border: 1px solid black;"></canvas>
+    </div>
+
+    <div style="position:absolute;top:200px;">캔버스를 클릭해서 랜덤의 사각형을 그려보세요!</div>
+    <div onload="draw()" onclick="drawRandomRectAtClick(event)">
+        <canvas id="randomRectSketchBook" width="200" height="100" style="position:absolute;top:230px; border: 1px solid black;"></canvas>
     </div>
 </body>
 
