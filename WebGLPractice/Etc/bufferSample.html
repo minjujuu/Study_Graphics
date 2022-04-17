@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+
+<body>
+    <canvas width="300" height="300" id="my_Canvas"></canvas>
+    <script src="../lib/webgl-utils.js"></script>
+    <script src="../lib/webgl-debug.js"></script>
+    <script src="../lib/cuon-utils.js"></script>
+    <script>
+        /*======= Creating a canvas =========*/
+
+        var canvas = document.getElementById('my_Canvas');
+        var gl = canvas.getContext('experimental-webgl');
+
+        /*======= Defining and storing the geometry ======*/
+
+        var vertices = [
+            -0.7, -0.1, 0,
+            -0.3, 0.6, 0,
+            -0.3, -0.3, 0,
+            0.2, 0.6, 0,
+            0.3, -0.3, 0,
+            0.7, 0.6, 0
+        ]
+        /*=================== Shaders ====================*/
+
+        // Vertex shader source code
+        var vertCode =
+            'attribute vec3 a_Position;' +
+            'void main(void) {' +
+            ' gl_Position = vec4(a_Position, 1.0);' +
+            '}';
+        // Fragment shader source code
+        var fragCode =
+            'void main(void) {' +
+            'gl_FragColor = vec4(0.0, 0.7, 1.0, 0.1);' +
+            '}';
+
+        // Initialize shaders
+        if (!initShaders(gl, vertCode, fragCode)) {
+            console.log('Failed to initialize shaders');
+
+        }
+
+        var shaderProgram = gl.createProgram();
+
+        
+    /*======= Associating shaders to buffer objects ======*/
+        // --------------------------- Position buffer -------------------------------
+
+        // WebGL에서 버퍼 오브젝트를 사용하는 순서
+        // 1. 버퍼를 만든다 gl.createBuffer()
+        // 2. Bind 한다 gl.bindBuffer(
+        // 3. 데이터를 버퍼에 집어넣는다 gl.bufferData
+        // 4. attribute 변수에 버퍼를 할당한다  gl.vertexAttribPointer
+        // 5. Enable 시킨다 gl.enableVertexAttribArray(
+
+        // Create an empty buffer object
+        var vertex_buffer = gl.createBuffer();
+
+
+        // Bind appropriate array buffer to it
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
+        // Pass the vertex data to the buffer
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+        // Get the attribute location
+        var a_Position = gl.getAttribLocation(shaderProgram, "a_Position");
+
+        // Point an attribute to the currently bound VBO
+        // - 첫번째 파라미터는 attribute 변수에 저장된 lotation을 나타냄
+        // - 두번째 파라미터는 차원을 가리킴 (1~4차원)
+        // - 세번째 파라미터는 데이터포맷을 가리킴
+        // - 네번째 파라미터는 normalized 여부
+        // - 다섯번째 파라미터는 stride 
+        // - 여섯번째 파라미터는 offset (개수)
+        gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
+
+        // Enable the attribute
+        // - attribute로 들어온 값 말고 버퍼로부터 들어온 값을 쓰라는 의미 
+        gl.enableVertexAttribArray(a_Position);
+
+
+        // ---------------------------------------------------------
+        // Clear the canvas
+        gl.clearColor(0.5, 0.5, 0.5, 0.9);
+
+        // Enable the depth test
+        gl.enable(gl.DEPTH_TEST);
+
+        // Clear the color and depth buffer
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        // Set the view port
+        gl.viewport(0, 0, canvas.width, canvas.height);
+
+        // Draw the triangle
+        gl.drawArrays(gl.LINES, 0, 6);
+
+    </script>
+
+</body>
+
+</html>
