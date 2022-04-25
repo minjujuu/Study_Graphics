@@ -6,7 +6,7 @@
     </head>
 
     <body onload="main()">
-        <button type="button" onclick="alert('Hello World!')">Move</button>
+        <button type="button" onclick="onClickMoveButton()">Move</button>
         <canvas id="webgl" onclick = "drawTriangleAtClick(event)"width="400" height="400" style="position:absolute;top:90px; border: 1px solid black">
             Please use a browser that supports "canvas"
             
@@ -16,6 +16,7 @@
         <script src="../lib/webgl-utils.js"></script>
         <script src="../lib/webgl-debug.js"></script>
         <script src="../lib/cuon-utils.js"></script>
+        <script src="../lib/cuon-matrix.js"></script>
 
         <script src="Assign2.js"></script>
     </body>

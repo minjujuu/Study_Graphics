@@ -1,8 +1,9 @@
 // Vertex shader program
 var VSHADER_SOURCE = 
 'attribute vec4 a_Position;'+
+ 'uniform mat4 u_matrix;' +
 'void main() {\n' +  
-' gl_Position = a_Position;\n' +
+' gl_Position = u_matrix * a_Position;\n' +
 ' gl_PointSize = 10.0;\n' +
 '}\n';
 
@@ -37,27 +38,33 @@ function main() {
     // Set the color for clearing <canvas>
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
-    // Clear <canvas>
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    var u_matrix = gl.getUniformLocation(gl.program, 'u_matrix');
+    gl.uniformMatrix4fv(u_matrix, false, [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    ]);
 
-    var shaderProgram = gl.createProgram();
-    console.log(`shaderProgram = ${shaderProgram}`);
-    gl.useProgram(shaderProgram);
-    let vertexColorLocation = gl.getUniformLocation(shaderProgram, "v_Color");
-    if(vertexColorLocation == -1) {
-        console.log(`vertexColorLocation is -1`);
+    if (u_matrix < 0) {
+        console.log(`Fail to get the storage location of u_matrixs`);
+        return;
     }
 
-    console.log(`vertexColorLocation = ${vertexColorLocation}`);
+
+    // Clear <canvas>
     gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.uniform4f(vertexColorLocation, 1.0, 0.0, 0.0, 1);
 
     // Draw a point
     gl.drawArrays(gl.POINTS, 0, 1);
 }
 
+var objDraw = undefined;
+var bTranslate = false;
+var bRotate = false;
+var matrix = new Matrix4();
 
-// drawRectAtClick(): 팔레트에서 선택한 색깔로 그려질 사각형의 색상을 결정합니다.
+
 function drawTriangleAtClick(e) {
     // html에서 rectSketchBook의 Id를 가진 element를 가져옵니다.
     var canvas = document.getElementById('webgl');
@@ -77,7 +84,23 @@ function drawTriangleAtClick(e) {
         console.log('Failed to initialize shaders');
         return;
     }
-    var shaderProgram = gl.createProgram();
+    var u_matrix = gl.getUniformLocation(gl.program, 'u_matrix');
+    
+    // gl.uniformMatrix4fv(u_matrix, false, [
+    //     1, 0, 0, 0,
+    //     0, 1, 0, 0,
+    //     0, 0, 1, 0,
+    //     0, 0, 0, 1
+    // ]);
+    console.log(matrix);
+    gl.uniformMatrix4fv(u_matrix, false, matrix.elements);
+
+    if (u_matrix < 0) {
+        console.log(`Fail to get the storage location of u_matrixs`);
+        return;
+    }
+
+    var shaderProgram = gl.program;
 
     var x = e.clientX;
     var y = e.clientY;
@@ -95,23 +118,21 @@ function drawTriangleAtClick(e) {
     }
     gl.vertexAttrib3f(a_Position, x, y, 0.0);
 
-    gl.drawArrays(gl.POINTS, 0, 1);
+    // gl.drawArrays(gl.POINTS, 0, 1);
 
-    return;
     var vertices = [
         x-0.1, y, 0,
         x, y+0.1, 0,
         x+0.1, y, 0,
     ]
 
-    
     var vertex_buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-    // var a_Position = gl.getAttribLocation(shaderProgram, "a_Position");
-    // gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
-    // gl.enableVertexAttribArray(a_Position);
+    var a_Position = gl.getAttribLocation(shaderProgram, "a_Position");
+    gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(a_Position);
 
  
 
@@ -126,11 +147,69 @@ function drawTriangleAtClick(e) {
     // Draw the triangle
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
-    // // 2차원 렌더링 컨텍스트를 나타내는 CanvasRenderingContext2D (en-US) 객체를 생성합니다.
-    // var ctx = canvas.getContext('2d'); 
-    // // 도형을 채우는 색을 설정합니다.
-    // ctx.fillStyle = 'rgba(233, 230, 67, 1.0)';
+    var tick = function() {
+        console.log(`tick-----`);
 
-    // // 시작점이 (x, y)이고 크기가 20x20인 사각형을 그립니다.
-    // ctx.fillRect(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop, 20, 20);
+        matrix.translate(0.001, 0.0, 0.0);
+        gl.uniformMatrix4fv(u_matrix, false, matrix.elements);
+
+        if(bRotate) {
+            matrix.rotate(1, 0, 0, 1);
+            gl.uniformMatrix4fv(u_matrix, false, matrix.elements);
+        }
+        gl.drawArrays(gl.TRIANGLES, 0, 3);        
+        requestAnimationFrame(tick);
+    };
+    tick();
+
+
+}
+
+function onClickMoveButton() {
+    var canvas = document.getElementById('webgl');
+    if(!canvas) {
+        console.log('Failed to retrieve the <canvas> element');
+        return false;
+    }
+    // Get the rendering context for WebGL
+    var gl = canvas.getContext('experimental-webgl');
+    if(!gl) {
+        console.log('Failed to get the rendering context for WebGL');
+        return;
+    }
+    
+    // Initialize shaders
+    if(!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
+        console.log('Failed to initialize shaders');
+        return;
+    }
+
+    bTranslate = true;
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
+
+    var u_matrix = gl.getUniformLocation(gl.program, 'u_matrix');
+    var matrix = new Matrix4();
+
+    // gl.uniformMatrix4fv(u_matrix, false, matrix.elements);
+    if (u_matrix < 0) {
+        console.log(`Fail to get the storage location of u_matrixs`);
+        return;
+    }
+
+    var tick = function() {
+        console.log(`tick-----`);
+
+        if(bTranslate) {
+            matrix.translate(0.001, 0.0, 0.0);
+            gl.uniformMatrix4fv(u_matrix, false, matrix.elements);
+        }
+        if(bRotate) {
+            matrix.rotate(1, 0, 0, 1);
+            gl.uniformMatrix4fv(u_matrix, false, matrix);
+        }
+        // gl.drawArrays(gl.TRIANGLES, 0, 3);        
+        requestAnimationFrame(tick);
+    };
+    tick();
 }
