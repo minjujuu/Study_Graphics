@@ -45,7 +45,7 @@
  * loop like this.
  *
  *       function render() {
- *         window.requestAnimFrame(render, canvas);
+ *         window.requestAnimationFrame(render, canvas);
  *
  *         // do rendering
  *         ...
@@ -57,159 +57,141 @@
  * visible.
  */
 
- WebGLUtils = function() {
+WebGLUtils = function() {
 
-    /**
-     * Creates the HTLM for a failure message
-     * @param {string} canvasContainerId id of container of th
-     *        canvas.
-     * @return {string} The html.
-     */
-    var makeFailHTML = function(msg) {
-      return '' +
-        '<table style="background-color: #8CE; width: 100%; height: 100%;"><tr>' +
-        '<td align="center">' +
-        '<div style="display: table-cell; vertical-align: middle;">' +
-        '<div style="">' + msg + '</div>' +
-        '</div>' +
-        '</td></tr></table>';
-    };
-    
-    /**
-     * Mesasge for getting a webgl browser
-     * @type {string}
-     */
-    var GET_A_WEBGL_BROWSER = '' +
-      'This page requires a browser that supports WebGL.<br/>' +
-      '<a href="http://get.webgl.org">Click here to upgrade your browser.</a>';
-    
-    /**
-     * Mesasge for need better hardware
-     * @type {string}
-     */
-    var OTHER_PROBLEM = '' +
-      "It doesn't appear your computer can support WebGL.<br/>" +
-      '<a href="http://get.webgl.org/troubleshooting/">Click here for more information.</a>';
-    
-    /**
-     * Mesasge for need better hardware
-     * @type {string}
-     */
-    var WEBGL2_COMPUTE_NOT_SUPPORTED = '' +
-      "It doesn't appear your computer can support WebGL 2.0 Compute.<br/>" +
-      '<a href="http://get.webgl.org/troubleshooting/">Click here for more information.</a>';
-    
-    /**
-     * Creates a webgl context. If creation fails it will
-     * change the contents of the container of the <canvas>
-     * tag to an error message with the correct links for WebGL.
-     * @param {Element} canvas. The canvas element to create a
-     *     context from.
-     * @param {WebGLContextCreationAttirbutes} opt_attribs Any
-     *     creation attributes you want to pass in.
-     * @return {WebGLRenderingContext} The created context.
-     */
-    var setupWebGL = function(canvas, opt_attribs) {
-      function showLink(str) {
-        var container = canvas.parentNode;
-        if (container) {
-          container.innerHTML = makeFailHTML(str);
-        }
-      };
-    
-      if (!window.WebGLRenderingContext) {
-        showLink(GET_A_WEBGL_BROWSER);
-        return null;
+/**
+ * Creates the HTLM for a failure message
+ * @param {string} canvasContainerId id of container of th
+ *        canvas.
+ * @return {string} The html.
+ */
+var makeFailHTML = function(msg) {
+  return '' +
+        '<div style="margin: auto; width:500px;z-index:10000;margin-top:20em;text-align:center;">' + msg + '</div>';
+  return '' +
+    '<table style="background-color: #8CE; width: 100%; height: 100%;"><tr>' +
+    '<td align="center">' +
+    '<div style="display: table-cell; vertical-align: middle;">' +
+    '<div style="">' + msg + '</div>' +
+    '</div>' +
+    '</td></tr></table>';
+};
+
+/**
+ * Mesasge for getting a webgl browser
+ * @type {string}
+ */
+var GET_A_WEBGL_BROWSER = '' +
+  'This page requires a browser that supports WebGL.<br/>' +
+  '<a href="http://get.webgl.org">Click here to upgrade your browser.</a>';
+
+/**
+ * Mesasge for need better hardware
+ * @type {string}
+ */
+var OTHER_PROBLEM = '' +
+  "It doesn't appear your computer can support WebGL.<br/>" +
+  '<a href="http://get.webgl.org">Click here for more information.</a>';
+
+/**
+ * Creates a webgl context. If creation fails it will
+ * change the contents of the container of the <canvas>
+ * tag to an error message with the correct links for WebGL.
+ * @param {Element} canvas. The canvas element to create a
+ *     context from.
+ * @param {WebGLContextCreationAttirbutes} opt_attribs Any
+ *     creation attributes you want to pass in.
+ * @param {function:(msg)} opt_onError An function to call
+ *     if there is an error during creation.
+ * @return {WebGLRenderingContext} The created context.
+ */
+var setupWebGL = function(canvas, opt_attribs, opt_onError) {
+  function handleCreationError(msg) {
+      var container = document.getElementsByTagName("body")[0];
+    //var container = canvas.parentNode;
+    if (container) {
+      var str = window.WebGLRenderingContext ?
+           OTHER_PROBLEM :
+           GET_A_WEBGL_BROWSER;
+      if (msg) {
+        str += "<br/><br/>Status: " + msg;
       }
-    
-      var context = create3DContext(canvas, opt_attribs);
-      if (!context) {
-        showLink(OTHER_PROBLEM);
-      }
-      return context;
-    };
-    
-    /**
-     * Creates a webgl2-compute context. If creation fails it will
-     * change the contents of the container of the <canvas>
-     * tag to an error message with the correct links for WebGL.
-     * @param {Element} canvas. The canvas element to create a
-     *     context from.
-     * @param {WebGLContextCreationAttirbutes} opt_attribs Any
-     *     creation attributes you want to pass in.
-     * @return {WebGLRenderingContext} The created context.
-     */
-    var setupWebGL2Compute = function(canvas, opt_attribs) {
-      function showLink(str) {
-        var container = canvas.parentNode;
-        if (container) {
-          container.innerHTML = makeFailHTML(str);
-        }
-      };
-    
-      if (!window.WebGLRenderingContext) {
-        showLink(GET_A_WEBGL_BROWSER);
-        return null;
-      }
-    
-      var context = canvas.getContext("webgl2-compute", opt_attribs);
-      if (!context) {
-        showLink(WEBGL2_COMPUTE_NOT_SUPPORTED);
-      }
-      return context;
-    };
-    
-    /**
-     * Creates a webgl context.
-     * @param {!Canvas} canvas The canvas tag to get context
-     *     from. If one is not passed in one will be created.
-     * @return {!WebGLContext} The created context.
-     */
-    var create3DContext = function(canvas, opt_attribs) {
-      var names = ["webgl", "experimental-webgl"];
-      var context = null;
-      for (var ii = 0; ii < names.length; ++ii) {
-        try {
-          context = canvas.getContext(names[ii], opt_attribs);
-        } catch(e) {}
-        if (context) {
-          break;
-        }
-      }
-      return context;
-    };
-    
-    return {
-      create3DContext: create3DContext,
-      setupWebGL: setupWebGL,
-      setupWebGL2Compute: setupWebGL2Compute
-    };
-    }();
-    
-    /**
-     * Provides requestAnimationFrame in a cross browser way.
-     */
-    window.requestAnimFrame = (function() {
-      return window.requestAnimationFrame ||
-             window.webkitRequestAnimationFrame ||
-             window.mozRequestAnimationFrame ||
-             window.oRequestAnimationFrame ||
-             window.msRequestAnimationFrame ||
-             function(/* function FrameRequestCallback */ callback, /* DOMElement Element */ element) {
-               return window.setTimeout(callback, 1000/60);
-             };
-    })();
-    
-    /**
-     * Provides cancelAnimationFrame in a cross browser way.
-     */
-    window.cancelAnimFrame = (function() {
-      return window.cancelAnimationFrame ||
-             window.webkitCancelAnimationFrame ||
-             window.mozCancelAnimationFrame ||
-             window.oCancelAnimationFrame ||
-             window.msCancelAnimationFrame ||
-             window.clearTimeout;
-    })();
-    
-    
+      container.innerHTML = makeFailHTML(str);
+    }
+  };
+
+  opt_onError = opt_onError || handleCreationError;
+
+  if (canvas.addEventListener) {
+    canvas.addEventListener("webglcontextcreationerror", function(event) {
+          opt_onError(event.statusMessage);
+        }, false);
+  }
+  var context = create3DContext(canvas, opt_attribs);
+  if (!context) {
+    if (!window.WebGLRenderingContext) {
+      opt_onError("");
+    } else {
+      opt_onError("");
+    }
+  }
+
+  return context;
+};
+
+/**
+ * Creates a webgl context.
+ * @param {!Canvas} canvas The canvas tag to get context
+ *     from. If one is not passed in one will be created.
+ * @return {!WebGLContext} The created context.
+ */
+var create3DContext = function(canvas, opt_attribs) {
+  var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+  var context = null;
+  for (var ii = 0; ii < names.length; ++ii) {
+    try {
+      context = canvas.getContext(names[ii], opt_attribs);
+    } catch(e) {}
+    if (context) {
+      break;
+    }
+  }
+  return context;
+}
+
+return {
+  create3DContext: create3DContext,
+  setupWebGL: setupWebGL
+};
+}();
+
+/**
+ * Provides requestAnimationFrame in a cross browser
+ * way.
+ */
+if (!window.requestAnimationFrame) {
+  window.requestAnimationFrame = (function() {
+    return window.requestAnimationFrame ||
+           window.webkitRequestAnimationFrame ||
+           window.mozRequestAnimationFrame ||
+           window.oRequestAnimationFrame ||
+           window.msRequestAnimationFrame ||
+           function(/* function FrameRequestCallback */ callback, /* DOMElement Element */ element) {
+             window.setTimeout(callback, 1000/60);
+           };
+  })();
+}
+
+/** * ERRATA: 'cancelRequestAnimationFrame' renamed to 'cancelAnimationFrame' to reflect an update to the W3C Animation-Timing Spec. 
+ * 
+ * Cancels an animation frame request. 
+ * Checks for cross-browser support, falls back to clearTimeout. 
+ * @param {number}  Animation frame request. */
+if (!window.cancelAnimationFrame) {
+  window.cancelAnimationFrame = (window.cancelRequestAnimationFrame ||
+                                 window.webkitCancelAnimationFrame || window.webkitCancelRequestAnimationFrame ||
+                                 window.mozCancelAnimationFrame || window.mozCancelRequestAnimationFrame ||
+                                 window.msCancelAnimationFrame || window.msCancelRequestAnimationFrame ||
+                                 window.oCancelAnimationFrame || window.oCancelRequestAnimationFrame ||
+                                 window.clearTimeout);
+}
