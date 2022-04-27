@@ -15,6 +15,9 @@ var FSHADER_SOURCE =
 ' gl_FragColor = v_Color;\n' +
 '}\n';
 
+var bTranslate = false;
+var bRotate = false;
+var matrix = new Matrix4();
 
 function main() {
     //Retrieve <canvas> element
@@ -57,11 +60,6 @@ function main() {
     gl.drawArrays(gl.POINTS, 0, 1);
 }
 
-var bTranslate = false;
-var bRotate = false;
-var matrix = new Matrix4();
-
-
 function drawTriangleAtClick(e) {
     // html에서 rectSketchBook의 Id를 가진 element를 가져옵니다.
     var canvas = document.getElementById('webgl');
@@ -81,6 +79,9 @@ function drawTriangleAtClick(e) {
         console.log('Failed to initialize shaders');
         return;
     }
+
+    // Clear the canvas
+    gl.clearColor(0.2, 0.3, 0.7, 0.9);
 
     var u_matrix = gl.getUniformLocation(gl.program, 'u_matrix');
     if (u_matrix < 0) {
@@ -102,9 +103,6 @@ function drawTriangleAtClick(e) {
     x = ((x - rect.left) - canvas.height / 2) / (canvas.height / 2);
     y = (canvas.width / 2 - (y - rect.top)) / (canvas.width / 2);
 
-    // Clear the canvas
-    gl.clearColor(0.2, 0.3, 0.7, 0.9);
-
     var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
     if (a_Position < 0) {
         console.log(`Fail to get the storage location of a_Position`);
@@ -123,10 +121,8 @@ function drawTriangleAtClick(e) {
     gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-    var a_Position = gl.getAttribLocation(gl.program, "a_Position");
     gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(a_Position);
-
 
     // Enable the depth test
     gl.enable(gl.DEPTH_TEST);
@@ -140,7 +136,6 @@ function drawTriangleAtClick(e) {
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
     var tick = function() {
-        console.log(`tick-----`);
 
         if(bTranslate) {
             matrix.translate(0.001, 0.0, 0.0);
@@ -168,7 +163,6 @@ function drawTriangleAtClick(e) {
 function onClickMoveButton() {
     bTranslate = true;
 }
-
 
 function onClickRotateButton() {
     bRotate = true;
