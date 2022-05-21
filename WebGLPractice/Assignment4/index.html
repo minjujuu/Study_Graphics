@@ -1,0 +1,55 @@
+<html>
+<head>
+    <script type="text/javascript" src="../lib/webgl-utils.js"></script>
+    <script type="text/javascript" src="../lib/cuon-matrix.js"></script>
+    <script type="text/javascript" src="../lib/cuon-utils.js"></script>
+    <script type="text/javascript" src="../lib/webgl-debug.js"></script>
+    <script type="text/javascript" src="./MV.js"></script>
+    <script type="text/javascript" src="./initShaders.js"></script>
+    <script id="vertex-shader" type="x-shader/x-vertex">
+
+        attribute  vec4 vPosition;
+        attribute  vec4 vColor;
+        varying vec4 fColor;
+
+        uniform mat4 modelViewMatrix;
+        uniform mat4 projectionMatrix;
+
+        void main() 
+        {
+            gl_Position = projectionMatrix*modelViewMatrix*vPosition;
+            fColor = vColor;
+        } 
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+
+        precision mediump float;
+
+        varying vec4 fColor;
+
+        void
+        main()
+        {
+            gl_FragColor = fColor;
+        }
+    </script>
+</head>
+<body>
+    <div>
+      <canvas id="gl-canvas" width="300" height="300"></canvas>
+    </div>
+    <div>
+      <button id="Button1" type="button">1</button>
+      <button id="Button2" type="button">2</button>
+      <button id="Button3" type="button">3</button>
+      <button id="Button4" type="button">4</button>
+      <button id="Button5" type="button">5</button>
+      <button id="Button6" type="button">6</button>
+      <button id="Button7" type="button">7</button>
+      <button id="Button8" type="button">8</button>
+    </div>
+</body>
+
+<script src="index.js"></script>
+</html>
