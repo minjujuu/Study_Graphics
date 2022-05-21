@@ -1,11 +1,11 @@
-//=====================================================================
-//변수들 선언
-//=====================================================================
+/* 201914302 박민주
+   컴퓨터그래픽스 실습과제 4 */
+
 var canvas;
 var gl;
 
 // 큐브 2개 = 사각형 12개 * 면당 정점 6개  = 72
-var NumVertices  = 96;
+var NumVertices  = 72;
 
 //정점을 저장하는 배열
 var points = [];
@@ -13,24 +13,12 @@ var points = [];
 //색상을 저장하는 배열
 var colors = [];
 
-//x, y, z축
-var xAxis = 0;
-var yAxis = 1;
-var zAxis = 2;
-
-//기본축
-var axis = 0;
-
-//x, y, z만큼 각도
-// var theta = [ 0, 0, 0 ];
-// var thetaLoc;
-
 var near = 0.6;
 var far = 40.0;
 var radius = 10.0;
 var theta  = 0.0;
 var phi    = 0.0;
-var dr = 5.0 * Math.PI/180.0;
+var dr = 5.0 * Math.PI/180.0; // 각도를 라디안으로 변환 (초기값은 5도의 라디안)
 
 var  fovy = 90.0;  // Field-of-view in Y direction angle (in degrees)
 var  aspect;       // Viewport aspect ratio
@@ -42,9 +30,10 @@ const at = vec3(0.0, 0.0, 0.0);
 const up = vec3(0.0, 1.0, 0.0);
 
 var program;
-function onKeyUp(event)
+
+// 키 입력 시 카메라의 Pan과 Zoom이 되도록 변수를 설정합니다.
+function onKeyDown(event)
 {
-    console.log(`event key = ${event.key}`);
     if (event.key == '+')
     {
         radius *= 0.5;
@@ -59,130 +48,90 @@ function onKeyUp(event)
     } else if(event.key == 'ArrowRight') {
         theta += dr;
     }
-
-    
-
 }
 
 //=====================================================================
-window.onload = function init()// 콜백함수, onload = 모든코드가 로드된 후 시작할 위치를 지정
-//모든 action은 init()과 render()같은 함수 안에 잇는데, 
-//onload 이벤트가 발생할때, init()함수를 실행하게함.
+// 콜백함수, onload = 모든코드가 로드된 후 시작할 위치를 지정합니다.
+window.onload = function init()
 {
-
-    document.addEventListener('keydown', onKeyUp, false);
+    // 키 입력에 대한 이벤트 리스너를 등록합니다.
+    document.addEventListener('keydown', onKeyDown, false);
+    // 'gl-canvas' 아이디를 가진 캔버스를 읽어옵니다.
     canvas = document.getElementById( "gl-canvas" );
-    // 캔버스를 읽어옴, getElementById 함수로 "gl-canvas"를 불러옴
 
+    // 불러온 canvas를 인자로 넘겨 WebGL 코드를 설정합니다.
     gl = WebGLUtils.setupWebGL( canvas );
-    // 불러온 canvas를 인자로 넘겨, WebGL코드를 설정해줌
     if ( !gl ) { alert( "WebGL isn't available" ); }
 
     //함수 실행
     colorCube();
     //=====================================================================
-    gl.viewport( 0, 0, canvas.width, canvas.height );//크기
+    // viewport(): 캔버스의 크기를 조정하는 경우 viewport를 통해 설정
+    gl.viewport( 0, 0, canvas.width, canvas.height );
     aspect =  canvas.width/canvas.height;
-    gl.clearColor( 0.0, 0.0, 0.0, 1.0 );//배경색
-    //depth buffer의 내용에 따라 fragment의 깊이 값을 테스트합니다.
-    //OpenGL은 depth test를 수행하고 이 테스트가 통과되면 이 depth buffer는 새로운 깊이 값으로 수정됩니다. 
-    //이 테스트가 실패한다면 해당 fragment는 폐기됩니다.
+    gl.clearColor( 0.0, 0.0, 0.0, 1.0 ); //배경색
+
+    // enable(): 컨텍스트에 대한 특정 WebGL 기능을 활성화합니다.
+    // - 여기에선 깊이 비교 및 깊이 버퍼 업데이트 활성화
     gl.enable(gl.DEPTH_TEST);
-    //=====================================================================
-
 
     //=====================================================================
-    //  Load shaders and initialize attribute buffers
-    //=====================================================================
-    //GPU에 넘겨줄 Program 객체
-    //initShaders사용하여 shader 로드, 컴파일, 링크하여 Program객체 생성
+    // GPU에 넘겨줄 Program 객체를 만들고 shader를 초기화합니다.
     program = initShaders( gl, "vertex-shader", "fragment-shader" );
     gl.useProgram( program );
     
-    //-------------------------------------------------------------------
-    //color 버퍼를 만들고 컬러를 넣음
+    //--------------------------- Color ----------------------------------
+    // Color 버퍼를 만들고 컬러 데이터인 colors를 설정합니다.
+    // 1. 버퍼를 생성합니다.
     var cBuffer = gl.createBuffer();
+    // 2. 생성된 버퍼를 작업할 버퍼로 지정합니다.
     gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
+    // 3. 지정된 버퍼에 데이터를 전달합니다.
     gl.bufferData( gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW );
 
+    // vColor 애트리뷰트를 가져옵니다.
     var vColor = gl.getAttribLocation( program, "vColor" );
+    // 애트리뷰트가 현재의 ARRAY_BUFFER의 바인드 포인트에서 데이터를 어떻게 가져올지 설정합니다.
     gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 0, 0 );
+    // 해당 애트리뷰트 위치를 사용할 수 있도록 설정합니다.
     gl.enableVertexAttribArray( vColor );
-    //-------------------------------------------------------------------
 
-    //-------------------------------------------------------------------
-    //data를 넣을 버펄르 만들고 데이터를 줌
+    //--------------------------- Vertex ----------------------------------
+    // Vertex 버퍼를 만들고 정점데이터인 points를 설정합니다.
     var vBuffer = gl.createBuffer();
+    // 2. 생성된 버퍼를 작업할 버퍼로 지정합니다.
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
+    // 3. 지정된 버퍼에 데이터를 전달합니다.
     gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
     
-
+    // vPosition 애트리뷰트를 가져옵니다.
     var vPosition = gl.getAttribLocation( program, "vPosition" );
+    // 애트리뷰트가 현재의 ARRAY_BUFFER의 바인드 포인트에서 데이터를 어떻게 가져올지 설정합니다.
     gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0 );
+    // 해당 애트리뷰트 위치를 사용할 수 있도록 설정합니다.
     gl.enableVertexAttribArray( vPosition );
-    //------------------------------------------------------------------- 
-
-    //getUniformLocation함수로 theta값 가져옴.
-    // thetaLoc = gl.getUniformLocation(program, "theta");
-     
-    //=====================================================================
-
 
     //=====================================================================
-    //버튼 이벤트 리스너 (축에 버튼에 해당하는 축을 넣음)
-    //=====================================================================
-    document.getElementById( "xButton" ).onclick = function () {
-        axis = xAxis;
-    };
-    document.getElementById( "yButton" ).onclick = function () {
-        axis = yAxis;
-    };
-    document.getElementById( "zButton" ).onclick = function () {
-        axis = zAxis;
-    };
-    //=====================================================================   
-
-    // buttons for viewing parameters
-    document.getElementById("Button1").onclick = function () { 
-        near *= 1.1; far *= 1.1; 
-        console.log(`Button1: near = ${near}, fat = ${far}`);
-    };
-    document.getElementById("Button2").onclick = function () { 
-        near *= 0.9; far *= 0.9;
-        console.log(`Button2: near = ${near}, fat = ${far}`);
-     };
-
-     // 3, 4가 zoom
-    document.getElementById("Button3").onclick = function () { 
+    // 버튼 onClick 콜백을 정의합니다.
+    document.getElementById("ZoomOut").onclick = function () { 
         radius *= 2.0;
-        console.log(`Button3: radius = ${radius}`);
      };
-    document.getElementById("Button4").onclick = function () { 
+    document.getElementById("ZoomIn").onclick = function () { 
         radius *= 0.5;
-        console.log(`Button4: radius = ${radius}`);
      };
-    document.getElementById("Button5").onclick = function () {  // 이게 pan 같음  
-        theta += dr;
-        console.log(`Button5: theta = ${theta}`);
-     };
-    document.getElementById("Button6").onclick = function () { 
+    document.getElementById("PanN").onclick = function () {  
         theta -= dr;
-        console.log(`Button6: theta = ${theta}`);
      };
-    document.getElementById("Button7").onclick = function () { 
-        phi += dr;
-        console.log(`Button7: phi = ${phi}`);
-     };
-    document.getElementById("Button8").onclick = function () { 
-        phi -= dr;
-        console.log(`Button8: phi = ${phi}`);
+    document.getElementById("PanP").onclick = function () { 
+        theta += dr;
      };
 
-
+     // render 함수를 실행합니다.
     render();
 }
 
 //=====================================================================   
+// 정육면체 2개를 그립니다.
 function colorCube()
 {
     cubeSpawnPoint = -5;
@@ -206,38 +155,11 @@ function colorCube()
 //=====================================================================   
 
 
-
-//=====================================================================   
-//4개의 인자로, abc, acd 사각형을 그려줌
-//=====================================================================   
-/*
-[밑에서 쳐다봤을때] 
-정육면체1개(삼각형 2개) 
-        
-   4ㅡㅡㅡㅡㅡㅡ7
-    |         |
-    |         |
-    |         |  
-    |         |
-   0ㅡㅡㅡㅡㅡㅡ3
- =>예제 cube코드를 가져와 사용.       
-*/
 var colorIndex = 0;
 var cubeSpawnPoint = 0;
-
+// 각 면을 그립니다.
 function quad(a, b, c, d, e, f) 
 {
-    console.log(`cubeSpawnPoint = ${cubeSpawnPoint}`);
-    // var vertices = [
-    //     vec4( -0.5, -0.5,  0.5, 1.0 ),//0
-    //     vec4( -0.5,  0.5,  -0.5, 1.0 ),//1
-    //     vec4( 0.5,  0.5,  0.5, 1.0 ),//2
-    //     vec4( 0.5, -0.5,  0.5, 1.0 ),//3
-    //     vec4( -0.5, -0.5, -0.5, 1.0 ),//4
-    //     vec4( -0.5,  0.5, -0.5, 1.0 ),//5
-    //     vec4( 0.5,  0.5, -0.5, 1.0 ),//6
-    //     vec4( 0.5, -0.5, -0.5, 1.0 )//7
-    // ];
     var vertices = [
         vec4( cubeSpawnPoint-0.5, -0.5,  0.5, 1.0 ),//0
         vec4( cubeSpawnPoint-0.5,  0.5,  0.5, 1.0 ),//1
@@ -271,11 +193,6 @@ function quad(a, b, c, d, e, f)
 //=====================================================================   
 
 
-
-
-
-
-
  
 //=====================================================================   
 function render()
@@ -291,13 +208,24 @@ function render()
     projectionMatrixLoc = gl.getUniformLocation(program, "projectionMatrix");
 
     eye = vec3(radius * Math.sin(theta) * Math.cos(phi), radius * Math.sin(theta) * Math.sin(phi), radius * Math.cos(theta));
+    /* lookAt(): change from WORLD space to EYE space
+       - eye: 카메라의 위치를 설정 (theta, phi의 초기값은 0이라서 처음엔 0, 0, 10의 위치로 지정)
+       - at: 0,0,0 으로 원점을 바라보도록 설정
+       - up: 0,1,0 으로 카메라의 위로 설정 
+       - at과 up은 반드시 직교해야 함 
+    */
     modelViewMatrix = lookAt(eye, at, up);
+    /* perspective():  viewing volume을 정의 
+       - fovy: top and bottom planes로부터의 angle을 설정
+       - aspect: near plane(width/height)의 aspect ratio를 설정
+       - near, far: 시야를 따라 clipping plane의 거리를 설정
+    */
     projectionMatrix = perspective(fovy, aspect, near, far);
 
     gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
     gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix));
 
+    //render 함수가 매 프레임마다 실행되도록 합니다.
     window.requestAnimationFrame( render );
-    //render 함수를 애니메이션으로 실행
 }
 //=====================================================================  

@@ -1,0 +1,59 @@
+<html>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+
+    attribute  vec4 vPosition;
+    attribute  vec4 vColor;
+    varying vec4 fColor;
+
+    uniform mat4 modelViewMatrix;
+    uniform mat4 projectionMatrix;
+
+    void main() 
+    {
+        gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+        fColor = vColor;
+    } 
+
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+   
+varying vec4 fColor;
+
+void
+main()
+{
+    gl_FragColor = fColor;
+}
+</script>
+
+<script type="text/javascript" src="./libs/webgl-utils.js"></script>
+<script type="text/javascript" src="./libs/cuon-matrix.js"></script>
+<script type="text/javascript" src="./libs/cuon-utils.js"></script>
+<script type="text/javascript" src="./libs/webgl-debug.js"></script>
+<script type="text/javascript" src="./libs/MV.js"></script>
+<script type="text/javascript" src="./libs/initShaders.js"></script>
+<script type="text/javascript" src="Assignment4.js"></script>
+
+<body>
+    <canvas id="gl-canvas" width="512" height="512">
+        Oops ... your browser doesn't support the HTML5 canvas element
+    </canvas>
+
+    <br />
+    <div>
+        Info.<br>
+        +, - 키를 누르면 카메라의 Zoom 을 조절할 수 있습니다.<br>
+        좌우 방향키를 누르면 카메라의 Pan을 조절할 수 있습니다.<br>
+        혹은 아래 버튼을 눌러서 조정할 수도 있습니다.<br>
+        <button id="ZoomOut" type="button">Zoom Out</button>
+        <button id="ZoomIn" type="button">Zoom In</button>
+        <button id="PanN" type="button">Pan (-) </button>
+        <button id="PanP" type="button">Pan (+) </button>
+    </div>
+</body>
+
+</html>

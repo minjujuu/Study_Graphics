@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Launch Chrome against localhost",
             // "url": "http://localhost:8080",
-            "file":"${workspaceFolder}/WebGLPractice/Assignment4/pyramid.html",
+            "file":"${workspaceFolder}/WebGLPractice/Assignment4/Assignment4.html",
             "webRoot": "${workspaceFolder}"
         }
     ]
